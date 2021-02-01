@@ -29,6 +29,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
@@ -253,6 +255,9 @@ public class MqttService extends Service implements MqttTraceHandler {
 
     // mapping from client handle strings to actual client connections.
     private final Map<String/* clientHandle */, MqttConnection/* client */> connections = new ConcurrentHashMap<>();
+	
+	private WakeLock wakeLock = null;
+	private WifiLock wifiLock = null;
 
     public MqttService() {
         super();
@@ -551,6 +556,16 @@ public class MqttService extends Service implements MqttTraceHandler {
         // create somewhere to buffer received messages until
         // we know that they have been passed to the application
         messageStore = new DatabaseMessageStore(this, this);
+		
+		PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com.bisioli.MQTT_10:WakeLock");
+        wakeLock.acquire();
+		traceDebug(TAG, "onCreate wakeLock acquired");
+		
+		WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF , "com.bisioli.MQTT_10:WifiLock");
+        wifiLock.acquire();
+		traceDebug(TAG, "onCreate wifiLock acquired");
     }
 
 
