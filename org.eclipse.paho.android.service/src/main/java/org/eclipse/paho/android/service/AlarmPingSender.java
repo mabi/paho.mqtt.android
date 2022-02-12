@@ -109,10 +109,10 @@ class AlarmPingSender implements MqttPingSender {
         if (Build.VERSION.SDK_INT >= 23) {
             // In SDK 23 and above, dosing will prevent setExact, setExactAndAllowWhileIdle will force
             // the device to run this task whilst dosing.
-            Log.d(TAG, "Alarm scheule using setExactAndAllowWhileIdle, next: " + delayInMilliseconds);
+            Log.d(TAG, "Alarm schedule using setExactAndAllowWhileIdle, next: " + delayInMilliseconds);
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarmInMilliseconds, pendingIntent);
         } else if (Build.VERSION.SDK_INT >= 19) {
-            Log.d(TAG, "Alarm scheule using setExact, delay: " + delayInMilliseconds);
+            Log.d(TAG, "Alarm schedule using setExact, delay: " + delayInMilliseconds);
             alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarmInMilliseconds, pendingIntent);
         } else {
             alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarmInMilliseconds, pendingIntent);
@@ -128,12 +128,13 @@ class AlarmPingSender implements MqttPingSender {
 
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
+					Log.d(TAG, "Ping async background task: Success.");
                     success = true;
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    Log.d(TAG, "Ping async task : Failed.");
+					Log.d(TAG, "Ping async background task: Failed.", exception);
                     success = false;
                 }
             });
@@ -142,27 +143,23 @@ class AlarmPingSender implements MqttPingSender {
                 if (token != null) {
                     token.waitForCompletion();
                 } else {
-                    Log.d(TAG, "Ping async background : Ping command was not sent by the client.");
+                    Log.d(TAG, "Ping async background task: Ping command was not sent by the client.");
                 }
             } catch (MqttException e) {
-                Log.d(TAG, "Ping async background : Ignore MQTT exception : " + e.getMessage());
+                Log.d(TAG, "Ping async background task: Ignore MQTT exception : " + e.getMessage());
             } catch (Exception ex) {
-                Log.d(TAG, "Ping async background : Ignore unknown exception : " + ex.getMessage());
+                Log.d(TAG, "Ping async background task: Ignore unknown exception : " + ex.getMessage());
             }
-            if (success == false) {
-                Log.d(TAG, "Ping async background task completed at " + System.currentTimeMillis() + " Success is " + success);
-            }
+            Log.d(TAG, "Ping async background task completed at " + System.currentTimeMillis() + " Success is " + success);
             return new Boolean(success);
         }
 
         protected void onPostExecute(Boolean success) {
-            if (success == false) {
-                Log.d(TAG, "Ping async task onPostExecute() Success is " + this.success);
-            }
+            Log.d(TAG, "Ping async task onPostExecute(" + success + ") Success is " + this.success);
         }
 
         protected void onCancelled(Boolean success) {
-            Log.d(TAG, "Ping async task onCancelled() Success is " + this.success);
+            Log.d(TAG, "Ping async task onCancelled(" + success + ") Success is " + this.success);
         }
 
     }
